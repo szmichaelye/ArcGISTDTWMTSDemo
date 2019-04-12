@@ -2,11 +2,16 @@ package net.szmichaelye.sky.arcgistdtwntsdemo;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
+import android.os.Environment;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 
+import com.esri.arcgisruntime.data.TileCache;
+import com.esri.arcgisruntime.layers.ArcGISTiledLayer;
+import com.esri.arcgisruntime.layers.ImageTiledLayer;
 import com.esri.arcgisruntime.layers.WebTiledLayer;
 import com.esri.arcgisruntime.mapping.ArcGISMap;
 import com.esri.arcgisruntime.mapping.Basemap;
@@ -21,6 +26,7 @@ public class MainActivity extends AppCompatActivity {
     private final String TAG="MainActivity";
     private MapView mapView;
     private WebTiledLayer webTiledLayer;
+    private WebTiledLayer webTiledLayerAnno;
     private GraphicsOverlay mGraphicsOverlay;
     private String[] permissions = {Manifest.permission.ACCESS_FINE_LOCATION
             , Manifest.permission.ACCESS_COARSE_LOCATION
@@ -33,13 +39,26 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         mapView=(MapView)findViewById(R.id.mmapview);
         quanxian();
-        webTiledLayer = TdtMapLayer.CreateTianDiTuTiledLayer(TdtMapLayer.LayerType.TIANDITU_VECTOR_2000);
-        webTiledLayer.loadAsync();
-        ArcGISMap map = new ArcGISMap(new Basemap(webTiledLayer));
-        mapView.setMap(map);
-        mGraphicsOverlay = new GraphicsOverlay();
-        mapView.getGraphicsOverlays().add(mGraphicsOverlay);
 
+
+        TileCache tileCache = new TileCache("/sdcard/Download/NNROAD01/Layers");
+        ArcGISTiledLayer tiledLayer = new ArcGISTiledLayer(tileCache);
+
+        webTiledLayer = TdtMapLayer.CreateTianDiTuTiledLayer(TdtMapLayer.LayerType.TIANDITU_IMAGE_2000);
+        webTiledLayerAnno = TdtMapLayer.CreateTianDiTuTiledLayer(TdtMapLayer.LayerType.TIANDITU_IMAGE_ANNOTATION_CHINESE_2000);
+        final List<ImageTiledLayer> imageBaseMapLayerList = new ArrayList<>();
+        imageBaseMapLayerList.add(webTiledLayer);
+        imageBaseMapLayerList.add(webTiledLayerAnno);
+        imageBaseMapLayerList.add(tiledLayer);
+
+        webTiledLayer.loadAsync();
+        ArcGISMap map = new ArcGISMap(new Basemap());
+        mapView.setMap(map);
+        map.getOperationalLayers().addAll(imageBaseMapLayerList);
+
+        webTiledLayer.loadAsync();
+        webTiledLayerAnno.loadAsync();
+        tiledLayer.loadAsync();
 
     }
 
